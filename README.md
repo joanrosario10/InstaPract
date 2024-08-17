@@ -39,7 +39,7 @@ To get a local copy of the project up and running, follow these steps:
 3. **Run the app:**
 
    ```sh
-   expo start
+   npx expo start
    ```
 
    This command will start the development server and open the Expo DevTools in your browser.
