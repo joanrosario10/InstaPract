@@ -1,0 +1,98 @@
+{
+  "success": true,
+  "msg": "Total No Of Doctor  : 7",
+  "data": [
+    {
+      "id": "1967edda-3e25-4e17-83db-a5039dfaa08e",
+      "email": "daniel@yopmail.com",
+      "specialty": [
+        {
+          "id": "40a7138d-b335-d799-916e-61a7f9b659ca",
+          "name": "Family Medicine"
+        }
+      ],
+      "first_name": "Daniel",
+      "name": "Dr. Daniel Antony",
+      "profile_picture": "https://uae-saas-api.instapract.ae/web/images/profileimages/zP3u-wUt-B_rnL3aO5f4IN57lbjdL01P.jpeg",
+      "online_status": "online",
+      "rating": "4",
+      "fixed_charge": "10",
+      "additional_minutes": "20",
+      "avaya_ext": "",
+      "avaya_username": "",
+      "avaya_password": "",
+      "fixed_duration": "20"
+    },
+    {
+      "id": "eabe5f8b-763c-46f3-b6b8-cf039afe3bf9",
+      "email": "abc@gmail.com",
+      "specialty": [
+        {
+          "id": "40a7138d-b335-d799-916e-61a7f9b659ca",
+          "name": "Family Medicine"
+        }
+      ],
+      "first_name": "fgf",
+      "name": "fgf ghj",
+      "profile_picture": "https://uae-saas-api.instapract.ae/web/images/profileimages/AQvH8ZTOWGDgENdzFlP4LNmmyXyzfPl6.jpg",
+      "online_status": "offline",
+      "rating": 0,
+      "fixed_charge": "",
+      "additional_minutes": "",
+      "avaya_ext": "",
+      "avaya_username": "",
+      "avaya_password": "",
+      "fixed_duration": ""
+    },
+    {
+      "id": "f9b4dbbb-14fe-415f-8390-c7405f1b7856",
+      "email": "tharun56@yopmail.com",
+      "specialty": [
+        {
+          "id": "40a7138d-b335-d799-916e-61a7f9b659ca",
+          "name": "Family Medicine"
+        },
+        {
+          "id": "f379394a-a435-4512-8c90-4264d3d9c073",
+          "name": "Family Physician"
+        },
+        {
+          "id": "878281ca-714a-4ec2-973e-c3e48b17a444",
+          "name": "Allergist"
+        }
+      ],
+      "first_name": "Tharun",
+      "name": "Dr Tharun P",
+      "profile_picture": "https://uae-saas-api.instapract.ae/web/images/profileimages/C6hUsKp0oQST0YLau4gNEMVsQu4404iY.png",
+      "online_status": "offline",
+      "rating": 0,
+      "fixed_charge": "10",
+      "additional_minutes": "20",
+      "avaya_ext": "",
+      "avaya_username": "",
+      "avaya_password": "",
+      "fixed_duration": "20"
+    },
+    {
+      "id": "4184c715-147b-0ec2-7022-cccef3bafb13",
+      "email": "heric@ahd.ae",
+      "specialty": [
+        {
+          "id": "40a7138d-b335-d799-916e-61a7f9b659ca",
+          "name": "Family Medicine"
+        }
+      ],
+      "first_name": "heric",
+      "name": "Dr. Heric G",
+      "profile_picture": "https://uae-saas-api.instapract.ae/web/images/profileimages/3T1gJLnLxAe6J69zWbD2VWkw7hMzWULtQ.jpg",
+      "online_status": "online",
+      "rating": "4",
+      "fixed_charge": "",
+      "additional_minutes": "",
+      "avaya_ext": "",
+      "avaya_username": "",
+      "avaya_password": "",
+      "fixed_duration": ""
+    }
+  ]
+}
