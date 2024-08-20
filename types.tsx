@@ -13,4 +13,5 @@ export type RootStackParamList = {
   LoginScreen: { userProfile: any };
   DoctorListScreen: { userProfile: any };
   ProfileScreen: { userProfile: any };
+  StartPage: { userProfile: any };
 };

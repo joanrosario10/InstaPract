@@ -12,7 +12,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useNavigation } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import axios from "axios";
-import UUID from "react-native-uuid"; // Import react-native-uuid
+import UUID from "react-native-uuid"; 
 
 type RootStackParamList = {
   DoctorListScreen: undefined;
@@ -23,7 +23,7 @@ type LoginScreenNavigationProp = NativeStackNavigationProp<
   "DoctorListScreen"
 >;
 
-// Create an axios instance with default configuration
+
 const api = axios.create({
   baseURL: "https://uae-saas-api.instapract.ae/web/api/default",
   headers: {
@@ -32,7 +32,7 @@ const api = axios.create({
   },
 });
 
-// Interceptor to add token to requests
+
 api.interceptors.request.use(
   async (config) => {
     const authToken = await AsyncStorage.getItem("authToken");
@@ -44,7 +44,7 @@ api.interceptors.request.use(
   (error) => Promise.reject(error)
 );
 
-// Interceptor to handle token expiration
+
 api.interceptors.response.use(
   (response) => response,
   async (error) => {
@@ -52,15 +52,10 @@ api.interceptors.response.use(
     if (error.response.status === 401 && !originalRequest._retry) {
       originalRequest._retry = true;
       try {
-        // Refresh token logic here, if applicable
-        // Example:
-        // const { data } = await api.post("/refresh-token");
-        // await AsyncStorage.setItem("authToken", data.accessToken);
-        // return api(originalRequest);
+        
       } catch (refreshError) {
         await AsyncStorage.removeItem("authToken");
-        // Redirect to login or show a message
-        // navigation.navigate("LoginScreen");
+        
       }
     }
     return Promise.reject(error);
@@ -116,10 +111,10 @@ const LoginScreen: React.FC = () => {
       const data = response.data;
 
       if (data.success) {
-        const token = data.data.access_token; // Correctly access the access_token
+        const token = data.data.access_token; 
 
         if (token) {
-          // Store the valid token and user profile in AsyncStorage
+          
           await AsyncStorage.setItem("authToken", token);
 
           const userProfile = {
@@ -136,7 +131,6 @@ const LoginScreen: React.FC = () => {
           );
           await AsyncStorage.setItem("patientUserId", data.data.User.id); // Store User ID
 
-          // Handle "Remember Me" feature
           if (rememberMe) {
             await AsyncStorage.setItem("email", email);
             await AsyncStorage.setItem("password", password);
@@ -147,7 +141,7 @@ const LoginScreen: React.FC = () => {
             await AsyncStorage.removeItem("rememberMe");
           }
 
-          // Navigate to the next screen
+          
           navigation.navigate("DoctorListScreen");
         } else {
           console.error("No access token found in response.");

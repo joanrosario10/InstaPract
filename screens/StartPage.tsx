@@ -8,7 +8,7 @@ import {
   TouchableOpacity,
 } from "react-native";
 import { useNavigation } from "@react-navigation/native";
-import { RootStackParamList } from "../types"; // Adjust the path according to your folder structure
+import { RootStackParamList } from "../types"; 
 
 const { width, height } = Dimensions.get("window");
 
@@ -51,14 +51,14 @@ const styles = StyleSheet.create({
   },
   semicircleContainer: {
     width: width,
-    height: height * 0.6, // Adjust height as needed
+    height: height * 0.6, 
     justifyContent: "center",
     alignItems: "center",
   },
   semicircle: {
     width: width,
-    height: height * 0.3, // Half of the container height
-    backgroundColor: "#007BFF", // Semicircle color
+    height: height * 0.3, 
+    backgroundColor: "#007BFF", 
     borderTopLeftRadius: width / 2,
     borderTopRightRadius: width / 2,
     borderBottomWidth: 0,
@@ -71,7 +71,7 @@ const styles = StyleSheet.create({
     bottom: -120,
     justifyContent: "center",
     alignItems: "center",
-    width: width * 0.9, // Adjust width as needed
+    width: width * 0.9, 
     backgroundColor: "transparent",
   },
   title: {
@@ -88,19 +88,19 @@ const styles = StyleSheet.create({
     marginBottom: 40,
   },
   button: {
-    backgroundColor: "#ffffff", // Button color
+    backgroundColor: "#ffffff",
     borderRadius: 5,
     paddingVertical: 10,
     paddingHorizontal: 20,
     alignItems: "center",
-    shadowColor: "#000000", // Optional: add shadow for elevation
+    shadowColor: "#000000", 
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.2,
     shadowRadius: 3,
     elevation: 2,
   },
   buttonText: {
-    color: "#007BFF", // Button text color
+    color: "#007BFF",
     fontSize: 18,
     fontWeight: "bold",
   },
@@ -108,7 +108,7 @@ const styles = StyleSheet.create({
     position: "absolute",
     left: 20,
     top: 50,
-    width: width * 0.6, // Adjust width as needed
+    width: width * 0.6,
     justifyContent: "center",
     alignItems: "flex-start",
   },
