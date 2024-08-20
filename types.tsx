@@ -8,7 +8,9 @@ export type NavigationProps = StackNavigationProp<
 // Define RootStackParamList with your screen names
 export type RootStackParamList = {
   navigate(arg0: string): void;
-  DoctorsScreen: undefined;
-  ProfileScreen: undefined;
-  // Add other screens here
+  DoctorsScreen: { userProfile: any };
+  ProfileScreenSettings: undefined;
+  LoginScreen: { userProfile: any };
+  DoctorListScreen: { userProfile: any };
+  ProfileScreen: { userProfile: any };
 };

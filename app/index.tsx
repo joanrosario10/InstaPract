@@ -1,41 +1,13 @@
 import React from "react";
-import { createNativeStackNavigator } from "@react-navigation/native-stack";
-import LoginScreen from "../screens/LoginScreen";
-import DoctorListScreen from "../screens/DoctorListScreen";
-import ProfileScreen from "../screens/ProfileScreen";
-import ProfileScreenSettings from "../screens/ProfileScreenSettings";
-import StartPage from "../screens/StartPage";
+import { NavigationContainer } from "@react-navigation/native";
+import AppNavigator from "../layouts/index"; // Adjust path as necessary
 
-const Stack = createNativeStackNavigator();
-
-export default function App() {
+const App = () => {
   return (
-    <Stack.Navigator initialRouteName="Login">
-      <Stack.Screen
-        name="StartPage"
-        component={StartPage}
-        options={{ headerShown: false }}
-      />
-      <Stack.Screen
-        name="LoginScreen"
-        component={LoginScreen}
-        options={{ headerShown: false }}
-      />
-      <Stack.Screen
-        name="DoctorListScreen"
-        component={DoctorListScreen}
-        options={{ headerShown: false }}
-      />
-      <Stack.Screen
-        name="ProfileScreen"
-        component={ProfileScreen}
-        options={{ headerShown: false }}
-      />
-      <Stack.Screen
-        name="ProfileScreenSettings"
-        component={ProfileScreenSettings}
-        options={{ headerShown: false }}
-      />
-    </Stack.Navigator>
+    
+      <AppNavigator />
+    
   );
-}
+};
+
+export default App;

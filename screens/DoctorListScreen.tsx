@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   View,
   Text,
@@ -9,13 +9,11 @@ import {
   Dimensions,
 } from "react-native";
 import { useNavigation } from "@react-navigation/native";
-import Toast from "react-native-toast-message"; // Import Toast
-import { NavigationProps } from "../types"; // Import the navigation types
-import doctorListData from "../data/doctorListData.json";
-import doctorAvailabilityData from "../data/doctorAvailabilityData.json";
+import Toast from "react-native-toast-message";
+import axios from "axios";
 import { Ionicons } from "@expo/vector-icons";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
-// Define TypeScript interfaces for your data
 interface Doctor {
   id: string;
   name: string;
@@ -23,27 +21,18 @@ interface Doctor {
   specialty: { name: string }[];
 }
 
-interface AvailabilitySlot {
-  day: string;
-  start_time: string;
-  end_time: string;
-}
-
-interface DoctorAvailability {
-  doctor_id: string;
-  available_slots: AvailabilitySlot[];
-}
-
-// Props for FlatList item
-interface DoctorListItemProps {
-  item: Doctor;
+interface DoctorListResponse {
+  success: boolean;
+  msg: string;
+  data: Doctor[];
 }
 
 const { width, height } = Dimensions.get("window");
 
 const DoctorsScreen: React.FC = () => {
+  const [doctors, setDoctors] = useState<Doctor[]>([]);
   const [favorites, setFavorites] = useState<string[]>([]);
-  const navigation = useNavigation<NavigationProps>(); // Use the defined type
+  const navigation = useNavigation();
 
   const showToast = (message: string, type: "success" | "info" | "error") => {
     Toast.show({
@@ -53,65 +42,182 @@ const DoctorsScreen: React.FC = () => {
     });
   };
 
-  const toggleFavorite = (doctorId: string) => {
-    const isFavorite = favorites.includes(doctorId);
-    setFavorites((prevFavorites) =>
-      isFavorite
-        ? prevFavorites.filter((id) => id !== doctorId)
-        : [...prevFavorites, doctorId]
-    );
-    showToast(
-      isFavorite ? "Removed from favorites" : "Added to favorites",
-      isFavorite ? "info" : "success"
-    );
+  const fetchDoctors = async () => {
+    try {
+      const authToken = await AsyncStorage.getItem("authToken");
+      const patientUserId = await AsyncStorage.getItem("patientUserId");
+
+      if (!authToken || !patientUserId) {
+        showToast(
+          "Auth token or patient user ID is missing. Please log in again.",
+          "error"
+        );
+        return;
+      }
+
+      const response = await axios.post<DoctorListResponse>(
+        "https://uae-saas-api.instapract.ae/web/api/doctor/doc-list",
+        {},
+        {
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${authToken}`,
+            APPID: "Gem3s12345",
+          },
+        }
+      );
+
+      if (response.data.success) {
+        setDoctors(response.data.data);
+      } else {
+        showToast("Failed to fetch doctors: " + response.data.msg, "error");
+      }
+    } catch (error) {
+      handleApiError(error);
+    }
   };
 
-  const renderDoctor = ({ item }: { item: Doctor }) => {
-    // Find availability for the doctor
-    const availability = doctorAvailabilityData.data.find(
-      (a: DoctorAvailability) => a.doctor_id === item.id
-    );
+  useEffect(() => {
+    fetchDoctors();
+  }, []);
 
-    return (
-      <View style={styles.doctorCard}>
-        <Image
-          source={{ uri: item.profile_picture }}
-          style={styles.doctorImage}
-        />
-        <View style={styles.doctorInfo}>
-          <View style={styles.doctorHeader}>
-            <Text style={styles.doctorName}>{item.name}</Text>
-            <TouchableOpacity
-              onPress={() => toggleFavorite(item.id)}
-              style={styles.favoriteButton}
-            >
-              <Text style={styles.favoriteIcon}>
-                {favorites.includes(item.id) ? "♥" : "♡"}
-              </Text>
-            </TouchableOpacity>
-          </View>
-          <Text style={styles.doctorSpecialty}>
-            {item.specialty[0]?.name || "N/A"}
-          </Text>
-          {availability ? (
-            <View style={styles.availabilityContainer}>
-              {availability.available_slots.length > 0 ? (
-                availability.available_slots.map((slot, index) => (
-                  <Text key={index} style={styles.slot}>
-                    {slot.day}: {slot.start_time} - {slot.end_time}
-                  </Text>
-                ))
-              ) : (
-                <Text>No available slots</Text>
-              )}
-            </View>
-          ) : (
-            <Text>No availability data</Text>
-          )}
+  const toggleFavorite = async (doctorId: string) => {
+    try {
+      const isFavorite = favorites.includes(doctorId);
+      if (isFavorite) {
+        await removeFromFavorites(doctorId);
+      } else {
+        await addToFavorites(doctorId);
+      }
+      setFavorites((prevFavorites) =>
+        isFavorite
+          ? prevFavorites.filter((id) => id !== doctorId)
+          : [...prevFavorites, doctorId]
+      );
+      showToast(
+        isFavorite ? "Removed from favorites" : "Added to favorites",
+        isFavorite ? "info" : "success"
+      );
+    } catch (error) {
+      showToast("An error occurred while updating favorites", "error");
+    }
+  };
+
+  const addToFavorites = async (doctorId: string) => {
+    try {
+      const authToken = await AsyncStorage.getItem("authToken");
+      const patientUserId = await AsyncStorage.getItem("patientUserId");
+
+      if (!authToken || !patientUserId || !doctorId) {
+        showToast(
+          "Missing required information. Please check your credentials.",
+          "error"
+        );
+        return;
+      }
+
+      const response = await axios.post(
+        "https://uae-saas-api.instapract.ae/web/api/patient/add-my-providers",
+        {
+          PatientMyProviders: {
+            doctor_user_id: doctorId,
+            is_deleted: "no",
+            patient_user_id: patientUserId,
+          },
+        },
+        {
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${authToken}`,
+            APPID: "Gem3s12345",
+          },
+        }
+      );
+
+      if (!response.data.success) {
+        showToast("Error adding to favorites: " + response.data.msg, "error");
+      }
+    } catch (error) {
+      handleApiError(error);
+    }
+  };
+
+  const removeFromFavorites = async (doctorId: string) => {
+    try {
+      const authToken = await AsyncStorage.getItem("authToken");
+      const patientUserId = await AsyncStorage.getItem("patientUserId");
+
+      if (!authToken || !patientUserId || !doctorId) {
+        showToast(
+          "Missing required information. Please check your credentials.",
+          "error"
+        );
+        return;
+      }
+
+      const response = await axios.post(
+        "https://uae-saas-api.instapract.ae/web/api/patient/add-my-providers",
+        {
+          PatientMyProviders: {
+            doctor_user_id: doctorId,
+            is_deleted: "yes",
+            patient_user_id: patientUserId,
+          },
+        },
+        {
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${authToken}`,
+            APPID: "Gem3s12345",
+          },
+        }
+      );
+
+      if (!response.data.success) {
+        showToast(
+          "Error removing from favorites: " + response.data.msg,
+          "error"
+        );
+      }
+    } catch (error) {
+      handleApiError(error);
+    }
+  };
+
+  const handleApiError = (error: any) => {
+    if (error.response) {
+      showToast("An error occurred while updating favorites", "error");
+    } else if (error.request) {
+      showToast("No response from the server", "error");
+    } else {
+      showToast("An error occurred while setting up the request", "error");
+    }
+  };
+
+  const renderDoctor = ({ item }: { item: Doctor }) => (
+    <View style={styles.doctorCard}>
+      <Image
+        source={{ uri: item.profile_picture }}
+        style={styles.doctorImage}
+      />
+      <View style={styles.doctorInfo}>
+        <View style={styles.doctorHeader}>
+          <Text style={styles.doctorName}>{item.name}</Text>
+          <TouchableOpacity
+            onPress={() => toggleFavorite(item.id)}
+            style={styles.favoriteButton}
+          >
+            <Text style={styles.favoriteIcon}>
+              {favorites.includes(item.id) ? "♥" : "♡"}
+            </Text>
+          </TouchableOpacity>
         </View>
+        <Text style={styles.doctorSpecialty}>
+          {item.specialty[0]?.name || "N/A"}
+        </Text>
       </View>
-    );
-  };
+    </View>
+  );
 
   return (
     <View style={styles.container}>
@@ -123,7 +229,7 @@ const DoctorsScreen: React.FC = () => {
         <View style={styles.headerInfo}>
           <View style={styles.profileSection}>
             <TouchableOpacity
-              onPress={() => navigation.navigate("ProfileScreen")} // Use the defined type
+              onPress={() => navigation.navigate("ProfileScreen")}
             >
               <Ionicons name="person-outline" size={24} color={"black"} />
             </TouchableOpacity>
@@ -132,7 +238,7 @@ const DoctorsScreen: React.FC = () => {
       </View>
       <Text style={styles.title}>List of Available Doctors</Text>
       <FlatList
-        data={doctorListData.data}
+        data={doctors}
         renderItem={renderDoctor}
         keyExtractor={(item) => item.id}
         contentContainerStyle={styles.doctorList}
@@ -150,107 +256,65 @@ const styles = StyleSheet.create({
   },
   header: {
     flexDirection: "row",
-    alignItems: "center",
     justifyContent: "space-between",
-    paddingVertical: height * 0.02,
-    backgroundColor: "#FFF",
-    paddingHorizontal: width * 0.02,
-    marginBottom: height * 0.02,
-    borderBottomWidth: 1,
-    borderBottomColor: "#DDD",
-    borderRadius: 20,
-    width: "100%",
-    height: height * 0.12,
+    alignItems: "center",
+    paddingVertical: height * 0.01,
   },
   logo: {
     width: width * 0.5,
     height: height * 0.2,
+    resizeMode: "contain",
   },
   headerInfo: {
-    alignItems: "flex-end",
-    justifyContent: "center",
-    paddingRight: 20,
-  },
-  profileSection: {
     flexDirection: "row",
     alignItems: "center",
   },
-  profileImage: {
-    width: width * 0.1,
-    height: width * 0.1,
-    borderRadius: width * 0.05,
-    marginRight: width * 0.03,
-  },
-  textInfo: {
-    alignItems: "flex-start",
-  },
-  userInfo: {
-    fontSize: width * 0.04,
-    fontWeight: "600",
-    color: "#2A9FBC",
-  },
-  userId: {
-    fontSize: width * 0.03,
-    color: "#666",
+  profileSection: {
+    marginLeft: width * 0.05,
   },
   title: {
-    fontSize: width * 0.05,
+    fontSize: 18,
     fontWeight: "bold",
-    color: "#333",
-    marginBottom: height * 0.02,
+    marginVertical: height * 0.02,
   },
   doctorList: {
-    flexGrow: 1,
+    paddingBottom: height * 0.1,
   },
   doctorCard: {
     flexDirection: "row",
-    alignItems: "center",
     backgroundColor: "#FFF",
-    padding: width * 0.04,
-    marginBottom: height * 0.01,
     borderRadius: 8,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 2,
+    marginVertical: height * 0.01,
+    padding: width * 0.02,
+    alignItems: "center",
   },
   doctorImage: {
-    width: width * 0.15,
-    height: width * 0.15,
-    borderRadius: width * 0.075,
-    marginRight: width * 0.05,
+    width: width * 0.2,
+    height: height * 0.1,
+    borderRadius: 8,
   },
   doctorInfo: {
     flex: 1,
+    marginLeft: width * 0.02,
   },
   doctorHeader: {
     flexDirection: "row",
-    alignItems: "center",
     justifyContent: "space-between",
+    alignItems: "center",
   },
   doctorName: {
-    fontSize: width * 0.05,
+    fontSize: 16,
     fontWeight: "bold",
-    color: "#333",
-  },
-  doctorSpecialty: {
-    fontSize: width * 0.04,
-    color: "#666",
-  },
-  availabilityContainer: {
-    marginTop: height * 0.01,
-  },
-  slot: {
-    fontSize: width * 0.04,
-    color: "#333",
   },
   favoriteButton: {
     padding: width * 0.02,
   },
   favoriteIcon: {
-    fontSize: width * 0.05,
-    color: "#FF5C5C", // Heart icon color
+    fontSize: 20,
+  },
+  doctorSpecialty: {
+    fontSize: 14,
+    color: "#555",
   },
 });
 

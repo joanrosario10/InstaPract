@@ -8,10 +8,11 @@ import {
   TouchableOpacity,
 } from "react-native";
 import Icon from "react-native-vector-icons/MaterialIcons";
-import loginData from "../data/loginData.json";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useNavigation } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
-import AsyncStorage from "@react-native-async-storage/async-storage";
+import axios from "axios";
+import UUID from "react-native-uuid"; // Import react-native-uuid
 
 type RootStackParamList = {
   DoctorListScreen: undefined;
@@ -21,6 +22,50 @@ type LoginScreenNavigationProp = NativeStackNavigationProp<
   RootStackParamList,
   "DoctorListScreen"
 >;
+
+// Create an axios instance with default configuration
+const api = axios.create({
+  baseURL: "https://uae-saas-api.instapract.ae/web/api/default",
+  headers: {
+    "Content-Type": "application/json",
+    APPID: "Gem3s12345",
+  },
+});
+
+// Interceptor to add token to requests
+api.interceptors.request.use(
+  async (config) => {
+    const authToken = await AsyncStorage.getItem("authToken");
+    if (authToken) {
+      config.headers.Authorization = `Bearer ${authToken}`;
+    }
+    return config;
+  },
+  (error) => Promise.reject(error)
+);
+
+// Interceptor to handle token expiration
+api.interceptors.response.use(
+  (response) => response,
+  async (error) => {
+    const originalRequest = error.config;
+    if (error.response.status === 401 && !originalRequest._retry) {
+      originalRequest._retry = true;
+      try {
+        // Refresh token logic here, if applicable
+        // Example:
+        // const { data } = await api.post("/refresh-token");
+        // await AsyncStorage.setItem("authToken", data.accessToken);
+        // return api(originalRequest);
+      } catch (refreshError) {
+        await AsyncStorage.removeItem("authToken");
+        // Redirect to login or show a message
+        // navigation.navigate("LoginScreen");
+      }
+    }
+    return Promise.reject(error);
+  }
+);
 
 const LoginScreen: React.FC = () => {
   const [email, setEmail] = useState("");
@@ -52,17 +97,46 @@ const LoginScreen: React.FC = () => {
   }, []);
 
   const handleLogin = async () => {
-    console.log("Entered Email:", email);
-    console.log("Entered Password:", password);
+    const deviceId = UUID.v4();
+    const osId = "b93a9204-ee21-4cf9-8a94-cf5eeabf7301";
+    const roleId = "143f37f2-ca38-0ab1-2489-1e47113655fc";
+    const language = "da315627-3ece-2016-c628-b61dc5ee9be0";
 
-    setTimeout(async () => {
-      const user = loginData.data.User;
+    const loginPayload = {
+      username: email,
+      password: password,
+      device_id: deviceId,
+      os_id: osId,
+      role_id: roleId,
+      language: language,
+    };
 
-      if (email === user.email && password === "Test@123") {
-        console.log("Login Successful:", user);
-        setLoginError("");
+    try {
+      const response = await api.post("/login", loginPayload);
+      const data = response.data;
 
-        try {
+      if (data.success) {
+        const token = data.data.access_token; // Correctly access the access_token
+
+        if (token) {
+          // Store the valid token and user profile in AsyncStorage
+          await AsyncStorage.setItem("authToken", token);
+
+          const userProfile = {
+            profile_picture: data.data.PatientProfile.profile_picture || "",
+            display_name:
+              `${data.data.PatientProfile.first_name} ${data.data.PatientProfile.last_name}` ||
+              "User",
+            id: data.data.PatientProfile.id || "",
+          };
+
+          await AsyncStorage.setItem(
+            "userProfile",
+            JSON.stringify(userProfile)
+          );
+          await AsyncStorage.setItem("patientUserId", data.data.User.id); // Store User ID
+
+          // Handle "Remember Me" feature
           if (rememberMe) {
             await AsyncStorage.setItem("email", email);
             await AsyncStorage.setItem("password", password);
@@ -72,17 +146,24 @@ const LoginScreen: React.FC = () => {
             await AsyncStorage.removeItem("password");
             await AsyncStorage.removeItem("rememberMe");
           }
-          const token = "dummy-auth-token";
-          await AsyncStorage.setItem("authToken", token);
 
+          // Navigate to the next screen
           navigation.navigate("DoctorListScreen");
-        } catch (error) {
-          console.error("Error handling credentials:", error);
+        } else {
+          console.error("No access token found in response.");
+          setLoginError("Failed to retrieve access token.");
         }
       } else {
-        setLoginError("Invalid username or password");
+        console.error("Login failed:", data.msg);
+        setLoginError(data.msg || "Invalid username or password");
       }
-    }, 1000);
+    } catch (error) {
+      console.error(
+        "Error during login:",
+        error.response?.data || error.message
+      );
+      setLoginError("An error occurred. Please try again.");
+    }
   };
 
   return (

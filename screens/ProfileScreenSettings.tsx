@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import {
   SafeAreaView,
@@ -14,10 +13,13 @@ import {
 import * as ImagePicker from "expo-image-picker";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import Toast from "react-native-toast-message";
+import { CountryPicker } from "react-native-country-codes-picker";
 
 const ProfileScreenSettings: React.FC = () => {
   const [profilePicUri, setProfilePicUri] = useState<string | null>(null);
   const [selectedCountryCode, setSelectedCountryCode] = useState<string>("+91");
+  const [selectedAltCountryCode, setSelectedAltCountryCode] =
+    useState<string>("+91");
   const [selectedCountry, setSelectedCountry] = useState<string>("");
   const [selectedState, setSelectedState] = useState<string>("");
   const [selectedCity, setSelectedCity] = useState<string>("");
@@ -27,7 +29,6 @@ const ProfileScreenSettings: React.FC = () => {
   const [showAltCountryPicker, setShowAltCountryPicker] = useState(false);
 
   useEffect(() => {
-    // Load stored data
     const loadData = async () => {
       try {
         const countryCode =
@@ -66,6 +67,16 @@ const ProfileScreenSettings: React.FC = () => {
     }
   };
 
+  const handleCountrySelect = (item: any) => {
+    setSelectedCountryCode(item.dial_code || "+91");
+    setShowCountryPicker(false);
+  };
+
+  const handleAltCountrySelect = (item: any) => {
+    setSelectedAltCountryCode(item.dial_code || "+91");
+    setShowAltCountryPicker(false);
+  };
+
   const handleUpdate = async () => {
     try {
       await AsyncStorage.setItem("countryCode", selectedCountryCode);
@@ -97,8 +108,7 @@ const ProfileScreenSettings: React.FC = () => {
       <ScrollView contentContainerStyle={styles.contentContainer}>
         <Text style={styles.sectionTitle}>Profile</Text>
 
-        {/* Profile Picture */}
-        <View style={styles.profilePicContainer}>
+        <View >
           <TouchableOpacity
             style={styles.profilePicPlaceholder}
             onPress={handleProfilePicSelect}
@@ -119,7 +129,6 @@ const ProfileScreenSettings: React.FC = () => {
 
         <Text style={styles.sectionTitle}>Contact Details</Text>
 
-        {/* Name */}
         <View style={styles.inputContainer}>
           <Text>First Name</Text>
           <TextInput style={styles.input} />
@@ -129,13 +138,11 @@ const ProfileScreenSettings: React.FC = () => {
           <TextInput style={styles.input} />
         </View>
 
-        {/* Address */}
         <View style={styles.inputContainer}>
           <Text>Address</Text>
           <TextInput style={styles.input} multiline />
         </View>
 
-        {/* Country */}
         <View style={styles.inputContainer}>
           <Text>Country</Text>
           <TextInput
@@ -146,7 +153,6 @@ const ProfileScreenSettings: React.FC = () => {
           />
         </View>
 
-        {/* State */}
         <View style={styles.inputContainer}>
           <Text>State</Text>
           <TextInput
@@ -157,7 +163,6 @@ const ProfileScreenSettings: React.FC = () => {
           />
         </View>
 
-        {/* City */}
         <View style={styles.inputContainer}>
           <Text>City</Text>
           <TextInput
@@ -168,13 +173,11 @@ const ProfileScreenSettings: React.FC = () => {
           />
         </View>
 
-        {/* Zipcode */}
         <View style={styles.inputContainer}>
           <Text>Zipcode</Text>
           <TextInput style={styles.input} keyboardType="numeric" />
         </View>
 
-        {/* Mobile Number */}
         <View style={styles.inputContainer}>
           <Text>Mobile Number</Text>
           <View style={styles.phoneContainer}>
@@ -195,7 +198,6 @@ const ProfileScreenSettings: React.FC = () => {
           </View>
         </View>
 
-        {/* Alternative Mobile Number */}
         <View style={styles.inputContainer}>
           <Text>Alternative Mobile Number</Text>
           <View style={styles.phoneContainer}>
@@ -204,7 +206,7 @@ const ProfileScreenSettings: React.FC = () => {
               style={styles.countryButton}
             >
               <Text style={styles.countryButtonText}>
-                {selectedCountryCode || "Select Country"}
+                {selectedAltCountryCode || "Select Country"}
               </Text>
             </TouchableOpacity>
             <TextInput
@@ -218,31 +220,69 @@ const ProfileScreenSettings: React.FC = () => {
 
         <Text style={styles.sectionTitle}>Login Credentials</Text>
 
-        {/* User Name / Email ID */}
         <View style={styles.inputContainer}>
           <Text>User Name / Email ID</Text>
           <TextInput style={styles.input} />
         </View>
 
-        {/* Password */}
         <View style={styles.inputContainer}>
           <Text>Password</Text>
           <TextInput style={styles.input} secureTextEntry />
         </View>
 
-        {/* Re-type Password */}
         <View style={styles.inputContainer}>
           <Text>Re-type Password</Text>
           <TextInput style={styles.input} secureTextEntry />
         </View>
 
-        {/* Update Button */}
         <View style={styles.inputContainer}>
           <Button title="Update" onPress={handleUpdate} />
         </View>
 
         {/* Country Picker Modals */}
-        {/* Add your CountryPicker components here if needed */}
+        <CountryPicker
+          show={showCountryPicker}
+          lang="en"
+          style={{
+            modal: {
+              height: 300,
+              backgroundColor: "transparent",
+            },
+            textInput: {
+              height: 40,
+              borderRadius: 5,
+              paddingHorizontal: 10,
+              backgroundColor: "#fff",
+            },
+            countryButtonStyles: {
+              height: 40,
+              justifyContent: "center",
+            },
+          }}
+          pickerButtonOnPress={handleCountrySelect}
+        />
+
+        <CountryPicker
+          show={showAltCountryPicker}
+          lang="en"
+          style={{
+            modal: {
+              height: 300,
+              backgroundColor: "transparent",
+            },
+            textInput: {
+              height: 40,
+              borderRadius: 5,
+              paddingHorizontal: 10,
+              backgroundColor: "#fff",
+            },
+            countryButtonStyles: {
+              height: 40,
+              justifyContent: "center",
+            },
+          }}
+          pickerButtonOnPress={handleAltCountrySelect}
+        />
       </ScrollView>
       <Toast />
     </SafeAreaView>
@@ -262,10 +302,6 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     marginVertical: 10,
   },
-  profilePicContainer: {
-    alignItems: "center",
-    marginVertical: 20,
-  },
   profilePicPlaceholder: {
     alignItems: "center",
   },
@@ -273,37 +309,40 @@ const styles = StyleSheet.create({
     width: 100,
     height: 100,
     borderRadius: 50,
+    backgroundColor: "#ddd",
   },
   addProfilePicText: {
     marginTop: 10,
-    fontSize: 16,
-    color: "#007bff",
+    color: "#007BFF",
   },
   inputContainer: {
-    marginBottom: 20,
+    marginVertical: 10,
   },
   input: {
     height: 40,
-    borderColor: "#ccc",
+    borderColor: "#ddd",
     borderWidth: 1,
     borderRadius: 5,
     paddingHorizontal: 10,
+    backgroundColor: "#fff",
   },
   phoneContainer: {
     flexDirection: "row",
     alignItems: "center",
   },
-  countryButton: {
-    backgroundColor: "#e0e0e0",
-    padding: 10,
-    borderRadius: 5,
-    marginRight: 10,
-  },
-  countryButtonText: {
-    fontSize: 16,
-  },
   phoneInput: {
     flex: 1,
+  },
+  countryButton: {
+    padding: 10,
+    borderColor: "#ddd",
+    borderWidth: 1,
+    borderRadius: 5,
+    backgroundColor: "#fff",
+    justifyContent: "center",
+  },
+  countryButtonText: {
+    color: "#333",
   },
 });
 
